@@ -338,7 +338,7 @@ class Connection extends \Illuminate\Database\Connection
      *
      * @return void
      */
-    public function rollBack()
+    public function rollBack($toLevel = NULL)
     {
         throw NotSupportedException::transactions();
     }
