@@ -195,6 +195,20 @@ class Column
     }
 
     /**
+     * Apply sumIf function to column.
+     *
+     * @param array|mixed $expression
+     *
+     * @return $this
+     */
+    public function sum()
+    {
+        $this->functions[] = ['function' => 'sum', 'params' => []];
+
+        return $this;
+    }
+
+    /**
      * Apply plus function to column.
      *
      * @param $value

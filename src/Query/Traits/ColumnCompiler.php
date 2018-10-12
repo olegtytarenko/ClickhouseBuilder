@@ -85,6 +85,10 @@ trait ColumnCompiler
         return 'count()';
     }
 
+    private function sum($column) {
+        return "sum($column)";
+    }
+
     /**
      * Compiles sumIf function on column.
      *
