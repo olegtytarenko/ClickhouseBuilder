@@ -3,6 +3,7 @@
 namespace Tinderbox\ClickhouseBuilder\Query;
 
 use Closure;
+use Illuminate\Support\Collection;
 use Tinderbox\Clickhouse\Common\TempTable;
 use Tinderbox\ClickhouseBuilder\Exceptions\BuilderException;
 use Tinderbox\ClickhouseBuilder\Query\Enums\Format;
@@ -137,7 +138,7 @@ abstract class BaseBuilder
      *
      * @param array|mixed $columns
      *
-     * @return static
+     * @return static|$this
      */
     public function select(...$columns)
     {
@@ -157,7 +158,7 @@ abstract class BaseBuilder
      *
      * @param string $column
      *
-     * @return static
+     * @return static|$this
      */
     public function getCountQuery($column = '*')
     {
@@ -176,7 +177,7 @@ abstract class BaseBuilder
      * Clone the query without the given properties.
      *
      * @param  array  $except
-     * @return static
+     * @return static|$this
      */
     public function cloneWithout(array $except)
     {
@@ -192,7 +193,7 @@ abstract class BaseBuilder
      *
      * @param array|mixed $columns
      *
-     * @return static
+     * @return static|$this
      */
     public function addSelect(...$columns)
     {
@@ -205,6 +206,45 @@ abstract class BaseBuilder
         $this->columns = array_merge($this->columns, $this->processColumns($columns));
 
         return $this;
+    }
+
+    /**
+     * @param $column
+     * @return static|$this
+     */
+    public function selectRaw($column) {
+        return $this->addSelect(new Expression($column));
+    }
+
+    /**
+     * @param $column
+     * @param null $asColumn
+     * @return $this
+     */
+    public function addSelectSum($column, $asColumn = null) {
+
+        if(is_array($column)) {
+            foreach ($column as $nameColumn => $iterateAsColumn) {
+                if(is_numeric($nameColumn) && is_string($iterateAsColumn)) {
+                    $this->addSelectSum($iterateAsColumn, $iterateAsColumn);
+                    continue;
+                }
+
+                if(!is_numeric($nameColumn) && is_string($iterateAsColumn)) {
+                    $this->addSelectSum($nameColumn, $iterateAsColumn);
+                    continue;
+                }
+            }
+
+            return $this;
+        }
+
+        if(!$asColumn) {
+            $asColumn = $column;
+        }
+        return $this->addSelect(function(Column $columnBuilder) use ($column, $asColumn) {
+            return $columnBuilder->name($column)->sum()->as($asColumn);
+        });
     }
 
     /**
@@ -272,7 +312,7 @@ abstract class BaseBuilder
      * @param string                 $alias
      * @param bool                   $isFinal
      *
-     * @return static
+     * @return static|$this
      */
     public function from($table, string $alias = null, bool $isFinal = null)
     {
@@ -328,7 +368,7 @@ abstract class BaseBuilder
      * @param string|null $alias
      * @param bool|null   $isFinal
      *
-     * @return static
+     * @return static|$this
      */
     public function table($table, string $alias = null, bool $isFinal = null)
     {
@@ -340,7 +380,7 @@ abstract class BaseBuilder
      *
      * @param float $coefficient
      *
-     * @return static
+     * @return static|$this
      */
     public function sample(float $coefficient)
     {
@@ -354,7 +394,7 @@ abstract class BaseBuilder
      *
      * @param self|Closure $query
      *
-     * @return static
+     * @return static|$this
      */
     public function unionAll($query)
     {
@@ -376,7 +416,7 @@ abstract class BaseBuilder
      *
      * @param string $alias
      *
-     * @return static
+     * @return static|$this
      */
     public function as(string $alias)
     {
@@ -390,7 +430,7 @@ abstract class BaseBuilder
      *
      * @param string $alias
      *
-     * @return static
+     * @return static|$this
      */
     public function alias(string $alias)
     {
@@ -402,7 +442,7 @@ abstract class BaseBuilder
      *
      * @param bool $final
      *
-     * @return static
+     * @return static|$this
      */
     public function final(bool $final = true)
     {
@@ -416,7 +456,7 @@ abstract class BaseBuilder
      *
      * @param string|Expression $arrayIdentifier
      *
-     * @return static
+     * @return static|$this
      */
     public function arrayJoin($arrayIdentifier)
     {
@@ -435,7 +475,7 @@ abstract class BaseBuilder
      * @param array|null          $using  Columns to use for join
      * @param bool                $global Global distribution for right table
      *
-     * @return static
+     * @return static|$this
      */
     public function join(
         $table,
@@ -505,7 +545,7 @@ abstract class BaseBuilder
      * @param array|null          $using
      * @param bool                $global
      *
-     * @return static
+     * @return static|$this
      */
     public function leftJoin($table, string $strict = null, array $using = null, bool $global = false)
     {
@@ -522,7 +562,7 @@ abstract class BaseBuilder
      * @param array|null          $using
      * @param bool                $global
      *
-     * @return static
+     * @return static|$this
      */
     public function innerJoin($table, string $strict = null, array $using = null, bool $global = false)
     {
@@ -538,7 +578,7 @@ abstract class BaseBuilder
      * @param array|null          $using
      * @param bool                $global
      *
-     * @return static
+     * @return static|$this
      */
     public function anyLeftJoin($table, array $using = null, bool $global = false)
     {
@@ -554,7 +594,7 @@ abstract class BaseBuilder
      * @param array|null          $using
      * @param bool                $global
      *
-     * @return static
+     * @return static|$this
      */
     public function allLeftJoin($table, array $using = null, bool $global = false)
     {
@@ -570,7 +610,7 @@ abstract class BaseBuilder
      * @param array|null          $using
      * @param bool                $global
      *
-     * @return static
+     * @return static|$this
      */
     public function anyInnerJoin($table, array $using = null, bool $global = false)
     {
@@ -586,7 +626,7 @@ abstract class BaseBuilder
      * @param array|null          $using
      * @param bool                $global
      *
-     * @return static
+     * @return static|$this
      */
     public function allInnerJoin($table, array $using = null, bool $global = false)
     {
@@ -736,7 +776,7 @@ abstract class BaseBuilder
      * @param TwoElementsLogicExpression|self|Closure|string|null $value
      * @param string                                              $concatOperator
      *
-     * @return static
+     * @return static|$this
      */
     public function preWhere($column, $operator = null, $value = null, string $concatOperator = Operator::AND)
     {
@@ -758,7 +798,7 @@ abstract class BaseBuilder
      *
      * @param string $expression
      *
-     * @return static
+     * @return static|$this
      */
     public function preWhereRaw(string $expression)
     {
@@ -770,7 +810,7 @@ abstract class BaseBuilder
      *
      * @param string $expression
      *
-     * @return static
+     * @return static|$this
      */
     public function orPreWhereRaw(string $expression)
     {
@@ -784,7 +824,7 @@ abstract class BaseBuilder
      * @param null $operator
      * @param null $value
      *
-     * @return static
+     * @return static|$this
      */
     public function orPreWhere($column, $operator = null, $value = null)
     {
@@ -801,7 +841,7 @@ abstract class BaseBuilder
      * @param string $boolean
      * @param bool   $not
      *
-     * @return static
+     * @return static|$this
      */
     public function preWhereIn($column, $values, $boolean = Operator::AND, $not = false)
     {
@@ -822,7 +862,7 @@ abstract class BaseBuilder
      * @param $column
      * @param $values
      *
-     * @return static
+     * @return static|$this
      */
     public function orPreWhereIn($column, $values)
     {
@@ -836,7 +876,7 @@ abstract class BaseBuilder
      * @param        $values
      * @param string $boolean
      *
-     * @return static
+     * @return static|$this
      */
     public function preWhereNotIn($column, $values, $boolean = Operator::AND)
     {
@@ -850,7 +890,7 @@ abstract class BaseBuilder
      * @param        $values
      * @param string $boolean
      *
-     * @return static
+     * @return static|$this
      */
     public function orPreWhereNotIn($column, $values, $boolean = Operator::OR)
     {
@@ -865,7 +905,7 @@ abstract class BaseBuilder
      * @param string $boolean
      * @param bool   $not
      *
-     * @return static
+     * @return static|$this
      */
     public function preWhereBetween($column, array $values, $boolean = Operator::AND, $not = false)
     {
@@ -882,7 +922,7 @@ abstract class BaseBuilder
      * @param string $boolean
      * @param bool   $not
      *
-     * @return static
+     * @return static|$this
      */
     public function preWhereBetweenColumns($column, array $values, $boolean = Operator::AND, $not = false)
     {
@@ -898,7 +938,7 @@ abstract class BaseBuilder
      * @param array  $values
      * @param string $boolean
      *
-     * @return static
+     * @return static|$this
      */
     public function preWhereNotBetweenColumns($column, array $values, $boolean = Operator::AND)
     {
@@ -911,7 +951,7 @@ abstract class BaseBuilder
      * @param       $column
      * @param array $values
      *
-     * @return static
+     * @return static|$this
      */
     public function orPreWhereBetweenColumns($column, array $values)
     {
@@ -924,7 +964,7 @@ abstract class BaseBuilder
      * @param       $column
      * @param array $values
      *
-     * @return static
+     * @return static|$this
      */
     public function orPreWhereNotBetweenColumns($column, array $values)
     {
@@ -937,7 +977,7 @@ abstract class BaseBuilder
      * @param       $column
      * @param array $values
      *
-     * @return static
+     * @return static|$this
      */
     public function orPreWhereBetween($column, array $values)
     {
@@ -951,7 +991,7 @@ abstract class BaseBuilder
      * @param array  $values
      * @param string $boolean
      *
-     * @return static
+     * @return static|$this
      */
     public function preWhereNotBetween($column, array $values, $boolean = Operator::AND)
     {
@@ -964,7 +1004,7 @@ abstract class BaseBuilder
      * @param       $column
      * @param array $values
      *
-     * @return static
+     * @return static|$this
      */
     public function orPreWhereNotBetween($column, array $values)
     {
@@ -979,7 +1019,7 @@ abstract class BaseBuilder
      * @param mixed                                          $value
      * @param string                                         $concatOperator
      *
-     * @return static
+     * @return static|$this
      */
     public function where($column, $operator = null, $value = null, string $concatOperator = Operator::AND)
     {
@@ -1001,11 +1041,19 @@ abstract class BaseBuilder
      *
      * @param string $expression
      *
-     * @return static
+     * @return static|$this
      */
     public function whereRaw(string $expression)
     {
         return $this->where(new Expression($expression));
+    }
+
+    public function whereLike($column, $value = null) {
+        list($value, $operator) = $this->prepareValueAndOperator('', $value, func_num_args() == 2);
+
+        $value = preg_replace('#(\"|\'|`)#', null, $value);
+
+        return $this->whereRaw("like(`{$column}`, '%{$value}%')");
     }
 
     /**
@@ -1013,7 +1061,7 @@ abstract class BaseBuilder
      *
      * @param string $expression
      *
-     * @return static
+     * @return static|$this
      */
     public function orWhereRaw(string $expression)
     {
@@ -1027,7 +1075,7 @@ abstract class BaseBuilder
      * @param null $operator
      * @param null $value
      *
-     * @return static
+     * @return static|$this
      */
     public function orWhere($column, $operator = null, $value = null)
     {
@@ -1044,7 +1092,7 @@ abstract class BaseBuilder
      * @param string $boolean
      * @param bool   $not
      *
-     * @return static
+     * @return static|$this
      */
     public function whereIn($column, $values, $boolean = Operator::AND, $not = false)
     {
@@ -1052,6 +1100,8 @@ abstract class BaseBuilder
 
         if (is_array($values)) {
             $values = new Tuple($values);
+        } elseif ($values instanceof Collection) {
+            $values = new Tuple($values->toArray());
         } elseif (is_string($values) && isset($this->files[$values])) {
             $values = new Identifier($values);
         }
@@ -1067,7 +1117,7 @@ abstract class BaseBuilder
      * @param string $boolean
      * @param bool   $not
      *
-     * @return static
+     * @return static|$this
      */
     public function whereGlobalIn($column, $values, $boolean = Operator::AND, $not = false)
     {
@@ -1088,7 +1138,7 @@ abstract class BaseBuilder
      * @param $column
      * @param $values
      *
-     * @return static
+     * @return static|$this
      */
     public function orWhereGlobalIn($column, $values)
     {
@@ -1102,7 +1152,7 @@ abstract class BaseBuilder
      * @param        $values
      * @param string $boolean
      *
-     * @return static
+     * @return static|$this
      */
     public function whereGlobalNotIn($column, $values, $boolean = Operator::AND)
     {
@@ -1116,7 +1166,7 @@ abstract class BaseBuilder
      * @param        $values
      * @param string $boolean
      *
-     * @return static
+     * @return static|$this
      */
     public function orWhereGlobalNotIn($column, $values, $boolean = Operator::OR)
     {
@@ -1129,7 +1179,7 @@ abstract class BaseBuilder
      * @param $column
      * @param $values
      *
-     * @return static
+     * @return static|$this
      */
     public function orWhereIn($column, $values)
     {
@@ -1143,7 +1193,7 @@ abstract class BaseBuilder
      * @param        $values
      * @param string $boolean
      *
-     * @return static
+     * @return static|$this
      */
     public function whereNotIn($column, $values, $boolean = Operator::AND)
     {
@@ -1157,7 +1207,7 @@ abstract class BaseBuilder
      * @param        $values
      * @param string $boolean
      *
-     * @return static
+     * @return static|$this
      */
     public function orWhereNotIn($column, $values, $boolean = Operator::OR)
     {
@@ -1172,7 +1222,7 @@ abstract class BaseBuilder
      * @param string $boolean
      * @param bool   $not
      *
-     * @return static
+     * @return static|$this
      */
     public function whereBetween($column, array $values, $boolean = Operator::AND, $not = false)
     {
@@ -1189,7 +1239,7 @@ abstract class BaseBuilder
      * @param string $boolean
      * @param bool   $not
      *
-     * @return static
+     * @return static|$this
      */
     public function whereBetweenColumns($column, array $values, $boolean = Operator::AND, $not = false)
     {
@@ -1204,7 +1254,7 @@ abstract class BaseBuilder
      * @param       $column
      * @param array $values
      *
-     * @return static
+     * @return static|$this
      */
     public function orWhereBetweenColumns($column, array $values)
     {
@@ -1217,7 +1267,7 @@ abstract class BaseBuilder
      * @param       $column
      * @param array $values
      *
-     * @return static
+     * @return static|$this
      */
     public function orWhereBetween($column, array $values)
     {
@@ -1231,7 +1281,7 @@ abstract class BaseBuilder
      * @param array  $values
      * @param string $boolean
      *
-     * @return static
+     * @return static|$this
      */
     public function whereNotBetween($column, array $values, $boolean = Operator::AND)
     {
@@ -1244,7 +1294,7 @@ abstract class BaseBuilder
      * @param       $column
      * @param array $values
      *
-     * @return static
+     * @return static|$this
      */
     public function orWhereNotBetween($column, array $values)
     {
@@ -1259,7 +1309,7 @@ abstract class BaseBuilder
      * @param mixed                                          $value
      * @param string                                         $concatOperator
      *
-     * @return static
+     * @return static|$this
      */
     public function having($column, $operator = null, $value = null, string $concatOperator = Operator::AND)
     {
@@ -1275,7 +1325,7 @@ abstract class BaseBuilder
      *
      * @param string $expression
      *
-     * @return static
+     * @return static|$this
      */
     public function havingRaw(string $expression)
     {
@@ -1287,7 +1337,7 @@ abstract class BaseBuilder
      *
      * @param string $expression
      *
-     * @return static
+     * @return static|$this
      */
     public function orHavingRaw(string $expression)
     {
@@ -1301,7 +1351,7 @@ abstract class BaseBuilder
      * @param null $operator
      * @param null $value
      *
-     * @return static
+     * @return static|$this
      */
     public function orHaving($column, $operator = null, $value = null)
     {
@@ -1318,7 +1368,7 @@ abstract class BaseBuilder
      * @param string $boolean
      * @param bool   $not
      *
-     * @return static
+     * @return static|$this
      */
     public function havingIn($column, $values, $boolean = Operator::AND, $not = false)
     {
@@ -1339,7 +1389,7 @@ abstract class BaseBuilder
      * @param $column
      * @param $values
      *
-     * @return static
+     * @return static|$this
      */
     public function orHavingIn($column, $values)
     {
@@ -1353,7 +1403,7 @@ abstract class BaseBuilder
      * @param        $values
      * @param string $boolean
      *
-     * @return static
+     * @return static|$this
      */
     public function havingNotIn($column, $values, $boolean = Operator::AND)
     {
@@ -1367,7 +1417,7 @@ abstract class BaseBuilder
      * @param        $values
      * @param string $boolean
      *
-     * @return static
+     * @return static|$this
      */
     public function orHavingNotIn($column, $values, $boolean = Operator::OR)
     {
@@ -1382,7 +1432,7 @@ abstract class BaseBuilder
      * @param string $boolean
      * @param bool   $not
      *
-     * @return static
+     * @return static|$this
      */
     public function havingBetween($column, array $values, $boolean = Operator::AND, $not = false)
     {
@@ -1399,7 +1449,7 @@ abstract class BaseBuilder
      * @param string $boolean
      * @param bool   $not
      *
-     * @return static
+     * @return static|$this
      */
     public function havingBetweenColumns($column, array $values, $boolean = Operator::AND, $not = false)
     {
@@ -1414,7 +1464,7 @@ abstract class BaseBuilder
      * @param       $column
      * @param array $values
      *
-     * @return static
+     * @return static|$this
      */
     public function orHavingBetweenColumns($column, array $values)
     {
@@ -1427,7 +1477,7 @@ abstract class BaseBuilder
      * @param       $column
      * @param array $values
      *
-     * @return static
+     * @return static|$this
      */
     public function orHavingBetween($column, array $values)
     {
@@ -1441,7 +1491,7 @@ abstract class BaseBuilder
      * @param array  $values
      * @param string $boolean
      *
-     * @return static
+     * @return static|$this
      */
     public function havingNotBetween($column, array $values, $boolean = Operator::AND)
     {
@@ -1454,7 +1504,7 @@ abstract class BaseBuilder
      * @param       $column
      * @param array $values
      *
-     * @return static
+     * @return static|$this
      */
     public function orHavingNotBetween($column, array $values)
     {
@@ -1469,7 +1519,7 @@ abstract class BaseBuilder
      * @param array|string $key
      * @param string       $as
      *
-     * @return static
+     * @return static|$this
      */
     public function addSelectDict(string $dict, string $attribute, $key, string $as = null)
     {
@@ -1493,7 +1543,7 @@ abstract class BaseBuilder
      * @param              $value
      * @param string       $concatOperator
      *
-     * @return static
+     * @return static|$this
      */
     public function whereDict(
         string $dict,
@@ -1519,7 +1569,7 @@ abstract class BaseBuilder
      * @param $operator
      * @param $value
      *
-     * @return static
+     * @return static|$this
      */
     public function orWhereDict(
         string $dict,
@@ -1538,7 +1588,7 @@ abstract class BaseBuilder
      *
      * @param Closure|self|null $asyncQueries
      *
-     * @return static
+     * @return static|$this
      */
     public function asyncWithQuery($asyncQueries = null)
     {
@@ -1565,7 +1615,7 @@ abstract class BaseBuilder
      * @param int      $limit
      * @param int|null $offset
      *
-     * @return static
+     * @return static|$this
      */
     public function limit(int $limit, int $offset = null)
     {
@@ -1580,7 +1630,7 @@ abstract class BaseBuilder
      * @param int   $count
      * @param array ...$columns
      *
-     * @return static
+     * @return static|$this
      */
     public function limitBy(int $count, ...$columns)
     {
@@ -1597,7 +1647,7 @@ abstract class BaseBuilder
      * @param int      $limit
      * @param int|null $offset
      *
-     * @return static
+     * @return static|$this
      */
     public function take(int $limit, int $offset = null)
     {
@@ -1610,7 +1660,7 @@ abstract class BaseBuilder
      * @param int   $count
      * @param array ...$columns
      *
-     * @return static
+     * @return static|$this
      */
     public function takeBy(int $count, ...$columns)
     {
@@ -1622,7 +1672,7 @@ abstract class BaseBuilder
      *
      * @param $columns
      *
-     * @return static
+     * @return static|$this
      */
     public function groupBy(...$columns)
     {
@@ -1642,7 +1692,7 @@ abstract class BaseBuilder
      *
      * @param $columns
      *
-     * @return static
+     * @return static|$this
      */
     public function addGroupBy(...$columns)
     {
@@ -1664,7 +1714,7 @@ abstract class BaseBuilder
      * @param string         $direction
      * @param string|null    $collate
      *
-     * @return static
+     * @return static|$this
      */
     public function orderBy($column, string $direction = 'asc', string $collate = null)
     {
@@ -1682,7 +1732,7 @@ abstract class BaseBuilder
      *
      * @param string $expression
      *
-     * @return static
+     * @return static|$this
      */
     public function orderByRaw(string $expression)
     {
@@ -1698,7 +1748,7 @@ abstract class BaseBuilder
      * @param             $column
      * @param string|null $collate
      *
-     * @return static
+     * @return static|$this
      */
     public function orderByAsc($column, string $collate = null)
     {
@@ -1711,7 +1761,7 @@ abstract class BaseBuilder
      * @param             $column
      * @param string|null $collate
      *
-     * @return static
+     * @return static|$this
      */
     public function orderByDesc($column, string $collate = null)
     {
@@ -1723,7 +1773,7 @@ abstract class BaseBuilder
      *
      * @param string $format
      *
-     * @return static
+     * @return static|$this
      */
     public function format(string $format)
     {
@@ -1902,7 +1952,7 @@ abstract class BaseBuilder
      * @param array       $structure
      * @param string|null $format
      *
-     * @return static
+     * @return static|$this
      *
      * @throws BuilderException
      */
