@@ -1707,6 +1707,16 @@ abstract class BaseBuilder
         return $this;
     }
 
+    public function clearGroupBy() {
+        $this->groups = [];
+        return $this;
+    }
+
+    public function clearOrderBy() {
+        $this->orders = [];
+        return $this;
+    }
+
     /**
      * Add order by statement.
      *
