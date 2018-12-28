@@ -1068,6 +1068,12 @@ abstract class BaseBuilder
         return $this;
     }
 
+
+    public function shiftSelect() {
+        array_shift($this->columns);
+        return $this;
+    }
+
     /**
      * Add where statement "as is".
      *
