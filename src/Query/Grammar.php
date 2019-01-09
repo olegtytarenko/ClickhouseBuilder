@@ -55,6 +55,7 @@ class Grammar
         'limitBy',
         'limit',
         'unions',
+        'withTotal',
         'format',
     ];
 
@@ -81,6 +82,7 @@ class Grammar
                 $sql[$component] = $this->$compileMethod($query, $query->$component());
             }
         }
+
 
         return trim('SELECT '.trim(implode(' ', $sql)));
     }
