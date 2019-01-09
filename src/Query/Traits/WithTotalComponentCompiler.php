@@ -18,6 +18,6 @@ trait WithTotalComponentCompiler
             return "";
         }
 
-        return "WITH TOTAL";
+        return "WITH TOTALS";
     }
 }

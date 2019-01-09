@@ -146,7 +146,7 @@ abstract class BaseBuilder
     /**
      * @return bool
      */
-    public function withTotal() {
+    public function getWithTotal() {
         return $this->withTotal;
     }
 

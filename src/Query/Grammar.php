@@ -21,6 +21,7 @@ use Tinderbox\ClickhouseBuilder\Query\Traits\TupleCompiler;
 use Tinderbox\ClickhouseBuilder\Query\Traits\TwoElementsLogicExpressionsCompiler;
 use Tinderbox\ClickhouseBuilder\Query\Traits\UnionsComponentCompiler;
 use Tinderbox\ClickhouseBuilder\Query\Traits\WheresComponentCompiler;
+use Tinderbox\ClickhouseBuilder\Query\Traits\WithTotalComponentCompiler;
 
 class Grammar
 {
@@ -39,6 +40,7 @@ class Grammar
         LimitByComponentCompiler,
         UnionsComponentCompiler,
         FormatComponentCompiler,
+        WithTotalComponentCompiler,
         TupleCompiler;
 
     protected $selectComponents = [
@@ -50,12 +52,12 @@ class Grammar
         'prewheres',
         'wheres',
         'groups',
+        'withTotal',
         'havings',
         'orders',
         'limitBy',
         'limit',
         'unions',
-        'withTotal',
         'format',
     ];
 
