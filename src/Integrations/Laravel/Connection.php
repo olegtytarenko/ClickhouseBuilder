@@ -4,7 +4,7 @@ namespace Tinderbox\ClickhouseBuilder\Integrations\Laravel;
 
 use Tinderbox\Clickhouse\Client;
 use Tinderbox\Clickhouse\Cluster;
-use Tinderbox\Clickhouse\Common\ServerOptions;
+use Tinderbox\ClickhouseBuilder\Common\ServerOptions;
 use Tinderbox\Clickhouse\Interfaces\TransportInterface;
 use Tinderbox\Clickhouse\Server;
 use Tinderbox\Clickhouse\Transport\ClickhouseCLIClientTransport;

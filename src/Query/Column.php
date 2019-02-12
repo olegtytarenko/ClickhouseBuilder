@@ -63,7 +63,7 @@ class Column
      *
      * @return Column
      */
-    public function name($columnName) : self
+    public function name($columnName): self
     {
         if ($columnName instanceof \Closure) {
             $columnName = tap(new static($this->query), $columnName);
@@ -85,7 +85,7 @@ class Column
      *
      * @return Column
      */
-    public function as(string $alias) : self
+    public function as(string $alias): self
     {
         $this->alias = new Identifier($alias);
 
@@ -99,7 +99,7 @@ class Column
      *
      * @return Column
      */
-    public function alias(string $alias) : self
+    public function alias(string $alias): self
     {
         return $this->as($alias);
     }
@@ -115,7 +115,7 @@ class Column
     {
         if (is_array($expression)) {
             $expression = array_map(function ($element) {
-                return (string) $element;
+                return (string)$element;
             }, $expression);
 
             return implode(' ', $expression);
@@ -139,7 +139,7 @@ class Column
      *
      * @return Identifier|null
      */
-    public function getAlias() : ?Identifier
+    public function getAlias(): ?Identifier
     {
         return $this->alias;
     }
@@ -149,7 +149,7 @@ class Column
      *
      * @return array
      */
-    public function getFunctions() : array
+    public function getFunctions(): array
     {
         return $this->functions;
     }
@@ -159,7 +159,7 @@ class Column
      *
      * @return Builder|null
      */
-    public function getSubQuery() : ?Builder
+    public function getSubQuery(): ?Builder
     {
         return $this->subQuery;
     }
@@ -208,6 +208,14 @@ class Column
         return $this;
     }
 
+
+    public function avg()
+    {
+        $this->functions[] = ['function' => 'avg', 'params' => []];
+
+        return $this;
+    }
+
     /**
      * Apply plus function to column.
      *
@@ -232,6 +240,20 @@ class Column
     {
         $this->functions[] = ['function' => 'count'];
 
+        return $this;
+    }
+
+
+    public function concat(...$concats)
+    {
+        $this->functions[] = ['function' => 'concat', 'params' => $concats];
+
+        return $this;
+    }
+
+    public function dictGetUInt64($dictName, $keyGet, $keyMatch) {
+        $this->functions[] = ['function' => 'dictGetUInt64', 'params' => [$dictName, $keyGet, $keyMatch]];
+        
         return $this;
     }
 
@@ -266,7 +288,7 @@ class Column
      *
      * @return Builder
      */
-    public function subQuery() : Builder
+    public function subQuery(): Builder
     {
         return $this->subQuery = $this->query->newQuery();
     }

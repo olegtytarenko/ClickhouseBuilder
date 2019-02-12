@@ -247,6 +247,32 @@ abstract class BaseBuilder
         });
     }
 
+
+    public function addSelectAvg($column, $asColumn = null) {
+        if(is_array($column)) {
+            foreach ($column as $nameColumn => $iterateAsColumn) {
+                if(is_numeric($nameColumn) && is_string($iterateAsColumn)) {
+                    $this->addSelectAvg($iterateAsColumn, $iterateAsColumn);
+                    continue;
+                }
+
+                if(!is_numeric($nameColumn) && is_string($iterateAsColumn)) {
+                    $this->addSelectAvg($nameColumn, $iterateAsColumn);
+                    continue;
+                }
+            }
+
+            return $this;
+        }
+
+        if(!$asColumn) {
+            $asColumn = $column;
+        }
+        return $this->addSelect(function(Column $columnBuilder) use ($column, $asColumn) {
+            return $columnBuilder->name($column)->avg()->as($asColumn);
+        });
+    }
+
     /**
      * Prepares columns given by user to Column objects.
      *
@@ -1626,7 +1652,7 @@ abstract class BaseBuilder
      *
      * @param Closure|self|null $asyncQueries
      *
-     * @return static|$this
+     * @return static|$this|\Core\Database\ClickHouse\Query\Builder
      */
     public function asyncWithQuery($asyncQueries = null)
     {
@@ -1750,6 +1776,11 @@ abstract class BaseBuilder
         return $this;
     }
 
+    public function clearSelects() {
+        $this->columns = $this->processColumns([], false);
+        return $this;
+    }
+    
     public function clearGroupBy() {
         $this->groups = [];
         return $this;
