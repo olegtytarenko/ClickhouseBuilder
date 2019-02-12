@@ -22,6 +22,7 @@ use Tinderbox\ClickhouseBuilder\Query\Traits\TupleCompiler;
 use Tinderbox\ClickhouseBuilder\Query\Traits\TwoElementsLogicExpressionsCompiler;
 use Tinderbox\ClickhouseBuilder\Query\Traits\UnionsComponentCompiler;
 use Tinderbox\ClickhouseBuilder\Query\Traits\WheresComponentCompiler;
+use Tinderbox\ClickhouseBuilder\Query\Traits\WithTotalComponentCompiler;
 
 class Grammar
 {
@@ -41,7 +42,9 @@ class Grammar
         UnionsComponentCompiler,
         FormatComponentCompiler,
         SelectDictGetUInt64,
+        WithTotalComponentCompiler,
         TupleCompiler;
+
 
     protected $selectComponents = [
         'columns',
@@ -52,6 +55,7 @@ class Grammar
         'prewheres',
         'wheres',
         'groups',
+        'withTotal',
         'havings',
         'orders',
         'limitBy',
@@ -83,6 +87,7 @@ class Grammar
                 $sql[$component] = $this->$compileMethod($query, $query->$component());
             }
         }
+
 
         return trim('SELECT '.trim(implode(' ', $sql)));
     }

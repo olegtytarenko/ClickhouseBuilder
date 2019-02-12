@@ -133,6 +133,23 @@ abstract class BaseBuilder
      */
     protected $files = [];
 
+    protected $withTotal = false;
+
+    /**
+     * @return $this
+     */
+    public function addWithTotal() {
+        $this->withTotal = true;
+        return $this;
+    }
+
+    /**
+     * @return bool
+     */
+    public function getWithTotal() {
+        return $this->withTotal;
+    }
+
     /**
      * Set columns for select statement.
      *
